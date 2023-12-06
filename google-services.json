@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "525804235561",
+    "project_id": "meetme-7157b",
+    "storage_bucket": "meetme-7157b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525804235561:android:f8e45ea84017ea64e4e538",
+        "android_client_info": {
+          "package_name": "com.tahmidsheikh.meetme"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUMEHcaW4sawVG89Zd2BvaX1acAZnIRVk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
