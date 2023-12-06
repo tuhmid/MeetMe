@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -8,6 +9,20 @@ import CreateMeetDetails from './src/components/CreateMeetDetails';
 import CreateMeet from './src/components/CreateMeet';
 import JoinMeetDetails from './src/components/JoinMeetDetails';
 import Meet from './src/components/Meet';
+import { AppRegistry } from 'react-native';
+import { name as appName } from './app.json';
+
+
+// import { firebaseConfig } from './config'; // Adjust the path if needed
+// import { initializeApp } from '@react-native-firebase/app';
+// import '@react-native-firebase/database'; // Import the database module
+
+// const app = initializeApp(firebaseConfig);
+
+
+// if (!app) {
+//   console.error('Failed to initialize Firebase.');
+// }
 
 const Stack = createNativeStackNavigator();
 
