@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, Button, TextInput, Alert } from 'react-native'
 import Header from '../Header'
 import { useNavigation } from '@react-navigation/native'
-import { RadioButton } from 'react-native-paper'
+// import { RadioButton } from 'react-native-paper'
 import * as Location from 'expo-location'
 import { supabase } from '../../db/supabase' // Adjust the path based on your project structure
 import styles from '../style'
@@ -54,7 +54,7 @@ export default function CreateMeetDetails() {
       getLocation()
     }
 
-    // Cleanup function to stop watching for location updates
+    // stop watching location
     // return () => {
     //   if (locationSubscription) {
     //     locationSubscription.remove()
@@ -62,7 +62,8 @@ export default function CreateMeetDetails() {
     // }
   }, [formData.allowLocation])
 
-  // Function to generate a unique four-digit meetid
+  
+
   const generateUniqueMeetId = async () => {
     try {
       // Generate a random four-digit number
@@ -76,8 +77,8 @@ export default function CreateMeetDetails() {
 
       if (error) {
         console.error('Error checking meetid in the database:', error)
-        // Handle the error as needed
-        return null // Or throw an error, return a default value, etc.
+        
+        return null
       }
 
       // If a record with the same meetid already exists, regenerate the meetid
@@ -92,8 +93,7 @@ export default function CreateMeetDetails() {
 
         if (newError) {
           console.error('Error checking meetid in the database:', newError)
-          // Handle the error as needed
-          return null // Or throw an error, return a default value, etc.
+          return null 
         }
 
         data = newData

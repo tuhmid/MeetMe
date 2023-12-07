@@ -72,11 +72,11 @@ export default function JoinMeetDetails() {
     fetchMeetUsers()
 
     // Cleanup function
-    return () => {
-      if (locationSubscription) {
-        locationSubscription.remove()
-      }
-    }
+    // return () => {
+    //   if (locationSubscription) {
+    //     locationSubscription.remove()
+    //   }
+    // }
   }, [formData.allowLocation, meetId])
 
   const handleNext = async () => {
@@ -153,15 +153,12 @@ export default function JoinMeetDetails() {
         {/* Display users with the same meetId */}
         <Text>Users in this Meet:</Text>
         <FlatList
-  data={meetUsers}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }) => (
-    <View>
-      <Text>Name: {item.users.name}</Text>
-      <Text>Location: {JSON.stringify(item.users.location)}</Text>
-    </View>
-  )}
-/>
+          data={meetUsers}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Text>{item.users.name} - {item.users.location}</Text>
+          )}
+        />
       </View>
     </View>
   )
