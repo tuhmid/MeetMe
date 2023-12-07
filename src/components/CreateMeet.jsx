@@ -1,31 +1,58 @@
-// CreateMeet.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList } from 'react-native';
 import Header from '../Header';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { supabase } from '../../db/supabase'; // Adjust the path based on your project structure
 import styles from '../style';
 
 export default function CreateMeet() {
   const navigation = useNavigation();
+  const route = useRoute();
 
-  const [meetID, setMeetID] = useState('12345'); // Replace with actual logic to generate MeetID
-  const [invitees, setInvitees] = useState([]); // List of invitees with { name, location, connected }
+  const [meetID, setMeetID] = useState(null);
+  const [invitees, setInvitees] = useState([]);
+
+  useEffect(() => {
+    // Retrieve meetId from the route parameters
+    const { meetId } = route.params;
+    setMeetID(meetId);
+
+    // Fetch invitees based on the meetId from your Supabase database
+    const fetchInvitees = async () => {
+      try {
+        // Make a request to the 'meetings' table where meetid equals the provided meetId
+        const { data, error } = await supabase
+          .from('meetings')
+          .select('users')
+          .eq('meetid', meetId)
+          .single();
+    
+        if (error) {
+          throw error;
+        }
+    
+        // Log the response from Supabase (for debugging purposes)
+        console.log('Supabase Response:', data);
+    
+        // Extract the 'users' array from the data, handling the case where it's null
+        const usersArray = data && data.users ? data.users : [];
+    
+        // Log the extracted users array (for debugging purposes)
+        console.log('Users Array:', usersArray);
+    
+        // Set the invitees state with the retrieved data
+        setInvitees(usersArray);
+      } catch (error) {
+        console.error('Error fetching invitees:', error);
+      }
+    };
+
+    fetchInvitees();
+  }, [route.params]);
 
   const handleNavigateToMeet = () => {
     navigation.navigate('Meet');
   };
-
-  // Dummy data for testing
-  const dummyInvitees = [
-    { id: '1', name: 'John Doe', location: 'New York', connected: true },
-    { id: '2', name: 'Jane Doe', location: 'Los Angeles', connected: false },
-    // Add more invitees as needed
-  ];
-
-  // Add dummy invitees to state on component mount (useEffect)
-  useState(() => {
-    setInvitees(dummyInvitees);
-  }, []);
 
   return (
     <View>
@@ -50,4 +77,3 @@ export default function CreateMeet() {
     </View>
   );
 }
-

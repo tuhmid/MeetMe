@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TextInput, StyleSheet, Alert } from 'react-native';
+import { View, Text, Button, TextInput, Alert } from 'react-native';
 import Header from '../Header';
 import { useNavigation } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper';
 import * as Location from 'expo-location';
+import { supabase } from '../../db/supabase'; // Adjust the path based on your project structure
 import styles from '../style';
 
 export default function CreateMeetDetails() {
@@ -12,9 +13,9 @@ export default function CreateMeetDetails() {
     name: '',
     allowLocation: false,
     manualLocation: '',
-    travelTimeOption: '',
     userLocation: null,
   });
+  const [meetId, setMeetId] = useState(null); // New state to store meetid
 
   useEffect(() => {
     let locationSubscription;
@@ -53,26 +54,99 @@ export default function CreateMeetDetails() {
       getLocation();
     }
 
+    // Cleanup function to stop watching for location updates
     return () => {
-      // Stop watching for location updates when the component unmounts or allowLocation changes
       if (locationSubscription) {
         locationSubscription.remove();
       }
     };
   }, [formData.allowLocation]);
 
-  const handleNext = () => {
+  // Function to generate a unique four-digit meetid
+  const generateUniqueMeetId = async () => {
+    try {
+      // Generate a random four-digit number
+      let meetid = Math.floor(1000 + Math.random() * 9000);
 
+      // Check if the generated meetid already exists in the database
+      const { data, error } = await supabase
+        .from('meetings')
+        .select('meetid')
+        .eq('meetid', meetid);
 
-    
-    // Perform any necessary actions with the collected data
-    // For example, you can save the data to state or send it to an API
+      if (error) {
+        console.error('Error checking meetid in the database:', error);
+        // Handle the error as needed
+        return null; // Or throw an error, return a default value, etc.
+      }
 
-    // Log the collected data to the console (for demonstration purposes)
-    console.log('Collected Data:', formData);
+      // If a record with the same meetid already exists, regenerate the meetid
+      while (data && data.length > 0) {
+        meetid = Math.floor(1000 + Math.random() * 9000);
 
-    // Navigate to the 'CreateMeet' screen
-    navigation.navigate('CreateMeet');
+        // Check again if the regenerated meetid exists in the database
+        const { newData, newError } = await supabase
+          .from('meetings')
+          .select('meetid')
+          .eq('meetid', meetid);
+
+        if (newError) {
+          console.error('Error checking meetid in the database:', newError);
+          // Handle the error as needed
+          return null; // Or throw an error, return a default value, etc.
+        }
+
+        data = newData;
+      }
+
+      return meetid;
+    } catch (error) {
+      console.error('Error generating meetid:', error);
+      return null;
+    }
+  };
+
+  const handleNext = async () => {
+    try {
+      // Generate a unique four-digit meetid
+      const meetid = await generateUniqueMeetId();
+
+      if (!meetid) {
+        // Handle the case where meetid generation fails
+        return;
+      }
+
+      // Create an object with a 'users' property and the additional 'meetid'
+      const userData = {
+        users: {
+          name: formData.name,
+          location: formData.userLocation,
+        },
+        allowlocation: formData.allowLocation,
+        manuallocation: formData.manualLocation,
+        meetid: meetid,
+      };
+
+      // Insert data into your Supabase table
+      const { data, error } = await supabase
+        .from('meetings') // Make sure to use the correct table name here
+        .insert([userData]);
+
+      if (error) {
+        throw error;
+      }
+
+      // Set the meetid state with the generated meetid
+      setMeetId(meetid);
+
+      // Log the response from Supabase (for demonstration purposes)
+      console.log('Inserted Data:', data);
+
+      // Navigate to the 'CreateMeet' screen with the meetid parameter
+      navigation.navigate('CreateMeet', { meetId });
+    } catch (error) {
+      console.error('Error inserting data to Supabase:', error);
+    }
   };
 
   return (
@@ -104,17 +178,6 @@ export default function CreateMeetDetails() {
           value={formData.manualLocation}
           onChangeText={(text) => setFormData({ ...formData, manualLocation: text })}
         />
-
-        {/* Radio buttons for travel time options */}
-        <RadioButton.Group
-          onValueChange={(value) => setFormData({ ...formData, travelTimeOption: value })}
-          value={formData.travelTimeOption}
-        >
-          <View>
-            <RadioButton.Item label="Minimize everyone’s travel time" value="minimizeTravelTime" />
-            <RadioButton.Item label="Everyone has similar travel times" value="similarTravelTimes" />
-          </View>
-        </RadioButton.Group>
 
         {/* Button to navigate to the next screen */}
         <Button title="Next" onPress={handleNext} />

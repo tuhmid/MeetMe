@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/webpack-config": "^19.0.0",
+    "@react-native-async-storage/async-storage": "1.18.2",
     "@react-native-firebase/app": "^18.7.1",
     "@react-native-firebase/database": "^18.7.1",
     "@react-navigation/bottom-tabs": "^6.5.11",
@@ -17,6 +18,7 @@
     "@react-navigation/material-top-tabs": "^6.6.5",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
+    "@supabase/supabase-js": "^2.39.0",
     "expo": "^49.0.21",
     "expo-build-properties": "~0.8.3",
     "expo-dev-client": "~2.4.12",
@@ -35,6 +37,7 @@
     "react-native-reanimated": "~3.3.0",
     "react-native-safe-area-context": "4.6.3",
     "react-native-screens": "~3.22.0",
+    "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "~0.19.6"
   },
   "devDependencies": {
