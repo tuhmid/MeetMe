@@ -5,7 +5,7 @@ import styles from './style';
 export default function Header({ title }) {
   return (
     <View style={styles.header}>
-      <Text style={styles.headerText}>{title}</Text>
+      <Text style={styles.headerText}></Text>
     </View>
   );
 }

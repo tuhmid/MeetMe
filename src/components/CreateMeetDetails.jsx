@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TextInput, Alert } from 'react-native';
-import Header from '../Header';
-import { useNavigation } from '@react-navigation/native';
-import { RadioButton } from 'react-native-paper';
-import * as Location from 'expo-location';
-import { supabase } from '../../db/supabase'; // Adjust the path based on your project structure
-import styles from '../style';
+import React, { useState, useEffect } from 'react'
+import { View, Text, Button, TextInput, Alert } from 'react-native'
+import Header from '../Header'
+import { useNavigation } from '@react-navigation/native'
+import { RadioButton } from 'react-native-paper'
+import * as Location from 'expo-location'
+import { supabase } from '../../db/supabase' // Adjust the path based on your project structure
+import styles from '../style'
 
 export default function CreateMeetDetails() {
-  const navigation = useNavigation();
+  const navigation = useNavigation()
   const [formData, setFormData] = useState({
     name: '',
     allowLocation: false,
     manualLocation: '',
     userLocation: null,
-  });
-  const [meetId, setMeetId] = useState(null); // New state to store meetid
+  })
+  const [meetId, setMeetId] = useState(null) // New state to store meetid
 
   useEffect(() => {
-    let locationSubscription;
+    let locationSubscription
 
     const getLocation = async () => {
       try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
+        let { status } = await Location.requestForegroundPermissionsAsync()
         if (status !== 'granted') {
           Alert.alert(
             'Permission Denied',
             'You need to grant location permission to use this feature.'
-          );
-          setFormData({ ...formData, allowLocation: false });
+          )
+          setFormData({ ...formData, allowLocation: false })
         } else {
           // Start watching for location updates
           locationSubscription = Location.watchPositionAsync(
@@ -38,82 +38,82 @@ export default function CreateMeetDetails() {
               setFormData((prevData) => ({
                 ...prevData,
                 userLocation: location.coords,
-              }));
+              }))
 
               // Log the location data to the console whenever it changes
-              console.log('Location:', location.coords);
+              console.log('Location:', location.coords)
             }
-          );
+          )
         }
       } catch (error) {
-        console.error('Error requesting location permission:', error);
+        console.error('Error requesting location permission:', error)
       }
-    };
+    }
 
     if (formData.allowLocation) {
-      getLocation();
+      getLocation()
     }
 
     // Cleanup function to stop watching for location updates
-    return () => {
-      if (locationSubscription) {
-        locationSubscription.remove();
-      }
-    };
-  }, [formData.allowLocation]);
+    // return () => {
+    //   if (locationSubscription) {
+    //     locationSubscription.remove()
+    //   }
+    // }
+  }, [formData.allowLocation])
 
   // Function to generate a unique four-digit meetid
   const generateUniqueMeetId = async () => {
     try {
       // Generate a random four-digit number
-      let meetid = Math.floor(1000 + Math.random() * 9000);
+      let meetid = Math.floor(1000 + Math.random() * 9000)
 
       // Check if the generated meetid already exists in the database
       const { data, error } = await supabase
         .from('meetings')
         .select('meetid')
-        .eq('meetid', meetid);
+        .eq('meetid', meetid)
 
       if (error) {
-        console.error('Error checking meetid in the database:', error);
+        console.error('Error checking meetid in the database:', error)
         // Handle the error as needed
-        return null; // Or throw an error, return a default value, etc.
+        return null // Or throw an error, return a default value, etc.
       }
 
       // If a record with the same meetid already exists, regenerate the meetid
       while (data && data.length > 0) {
-        meetid = Math.floor(1000 + Math.random() * 9000);
+        meetid = Math.floor(1000 + Math.random() * 9000)
 
         // Check again if the regenerated meetid exists in the database
         const { newData, newError } = await supabase
           .from('meetings')
           .select('meetid')
-          .eq('meetid', meetid);
+          .eq('meetid', meetid)
 
         if (newError) {
-          console.error('Error checking meetid in the database:', newError);
+          console.error('Error checking meetid in the database:', newError)
           // Handle the error as needed
-          return null; // Or throw an error, return a default value, etc.
+          return null // Or throw an error, return a default value, etc.
         }
 
-        data = newData;
+        data = newData
       }
 
-      return meetid;
+      return meetid
     } catch (error) {
-      console.error('Error generating meetid:', error);
-      return null;
+      console.error('Error generating meetid:', error)
+      return null
     }
-  };
+  }
 
   const handleNext = async () => {
     try {
       // Generate a unique four-digit meetid
-      const meetid = await generateUniqueMeetId();
+      const meetid = await generateUniqueMeetId()
 
       if (!meetid) {
         // Handle the case where meetid generation fails
-        return;
+        return
       }
 
       // Create an object with a 'users' property and the additional 'meetid'
@@ -125,29 +125,29 @@ export default function CreateMeetDetails() {
         allowlocation: formData.allowLocation,
         manuallocation: formData.manualLocation,
         meetid: meetid,
-      };
+      }
 
       // Insert data into your Supabase table
       const { data, error } = await supabase
         .from('meetings') // Make sure to use the correct table name here
-        .insert([userData]);
+        .insert([userData])
 
       if (error) {
-        throw error;
+        throw error
       }
 
       // Set the meetid state with the generated meetid
-      setMeetId(meetid);
+      setMeetId(meetid)
 
       // Log the response from Supabase (for demonstration purposes)
-      console.log('Inserted Data:', data);
+      console.log('Inserted Data:', data)
 
       // Navigate to the 'CreateMeet' screen with the meetid parameter
-      navigation.navigate('CreateMeet', { meetId });
+      navigation.navigate('CreateMeet', { meetId })
     } catch (error) {
-      console.error('Error inserting data to Supabase:', error);
+      console.error('Error inserting data to Supabase:', error)
     }
-  };
+  }
 
   return (
     <View>
@@ -167,7 +167,7 @@ export default function CreateMeetDetails() {
         <Button
           title={formData.allowLocation ? 'Location Allowed' : 'Allow Location'}
           onPress={() => {
-            setFormData({ ...formData, allowLocation: !formData.allowLocation });
+            setFormData({ ...formData, allowLocation: !formData.allowLocation })
           }}
         />
 
@@ -188,5 +188,5 @@ export default function CreateMeetDetails() {
         )}
       </View>
     </View>
-  );
+  )
 }

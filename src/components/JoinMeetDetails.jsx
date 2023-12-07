@@ -1,95 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TextInput, Alert } from 'react-native';
-import Header from '../Header';
-import { useNavigation } from '@react-navigation/native';
-import { supabase } from '../../db/supabase'; // Adjust the path based on your project structure
-import styles from '../style';
+import React, { useState, useEffect } from 'react'
+import { View, Text, Button, TextInput, Alert, FlatList } from 'react-native'
+import Header from '../Header'
+import * as Location from 'expo-location'
 
-export default function JoinMeetDetails({ route }) {
-  const navigation = useNavigation();
-  const { meetId } = route.params;
+import { useNavigation, useRoute } from '@react-navigation/native'
+import { supabase } from '../../db/supabase'
+import styles from '../style'
+
+export default function JoinMeetDetails() {
+  const navigation = useNavigation()
+  const route = useRoute()
+  const { meetId } = route.params
+
   const [formData, setFormData] = useState({
     name: '',
     allowLocation: false,
     manualLocation: '',
     userLocation: null,
-  });
+  })
+
+  const [meetUsers, setMeetUsers] = useState([])
 
   useEffect(() => {
-    let locationSubscription;
+    let locationSubscription
 
     const getLocation = async () => {
       try {
-        // ... (unchanged code for requesting location permission)
+        let { status } = await Location.requestForegroundPermissionsAsync()
+        if (status !== 'granted') {
+          console.log('Location permission denied')
+          setFormData({ ...formData, allowLocation: false })
+        } else {
+          locationSubscription = Location.watchPositionAsync(
+            { accuracy: Location.Accuracy.Balanced, timeInterval: 5000 },
+            (location) => {
+              setFormData((prevData) => ({
+                ...prevData,
+                userLocation: location.coords,
+              }))
+            }
+          )
+        }
       } catch (error) {
-        console.error('Error requesting location permission:', error);
+        console.error('Error requesting location permission:', error)
       }
-    };
-
-    if (formData.allowLocation) {
-      getLocation();
     }
 
-    // return () => {
-    //   // if (locationSubscription) {
-    //   //   locationSubscription.remove();
-    //   // }
-    // };
-  }, [formData.allowLocation]);
+    if (formData.allowLocation) {
+      getLocation()
+    }
+
+    // Fetch users with the same meetId from the database
+    const fetchMeetUsers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('meetings')
+          .select('*')
+          .eq('meetid', meetId)
+
+        if (error) {
+          console.error('Error fetching meet users:', error)
+          // Handle the error as needed
+        } else {
+          setMeetUsers(data)
+        }
+      } catch (error) {
+        console.error('Error fetching meet users:', error)
+      }
+    }
+
+    fetchMeetUsers()
+
+    // Cleanup function
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove()
+      }
+    }
+  }, [formData.allowLocation, meetId])
 
   const handleNext = async () => {
     if (!formData.allowLocation && formData.manualLocation === '') {
-      Alert.alert('Invalid Input', 'Please enable location or enter a manual location.');
-      return;
+      Alert.alert('Invalid Input', 'Please enable location or enter a manual location.')
+      return
     }
   
     try {
-      // Fetch the existing data for the specific meetId
-      const { data: existingData, error: fetchError } = await supabase
-        .from('meetings')
-        .select('users')
-        .eq('meetid', meetId)
-        .single();
-  
-      if (fetchError) {
-        throw fetchError;
+      const userData = {
+        users: {
+          name: formData.name,
+          location: formData.allowLocation ? formData.userLocation : formData.manualLocation,
+        },
+        allowlocation: formData.allowLocation,
+        manuallocation: formData.manualLocation,
+        meetid: meetId,
       }
   
-      // Extract the existing users array or initialize it if it doesn't exist
-      const existingUsers = existingData && existingData.users ? existingData.users : [];
-  
-      // Create an object with 'users' property
-      const newUser = {
-        name: formData.name,
-        location: formData.allowLocation ? formData.userLocation : formData.manualLocation,
-      };
-  
-      // Add the new user to the existing users array
-      const updatedUsers = [...existingUsers, newUser];
-  
-      // Update the specific meetId row in the database with the updated users array
-      const { data: updateData, error: updateError } = await supabase
+      // Insert data into your Supabase table
+      const { data, error } = await supabase
         .from('meetings')
-        .update({
-          users: updatedUsers,
-        })
-        .eq('meetid', meetId);
+        .insert([userData])
   
-      if (updateError) {
-        throw updateError;
+      if (error) {
+        throw error
       }
   
-      // Log the response from Supabase (for demonstration purposes)
-      console.log('Updated Data:', updateData);
+      console.log('Inserted Data:', data)
   
       // Navigate to the 'Meet' screen
-      navigation.navigate('Meet');
+      navigation.navigate('Meet')
     } catch (error) {
-      console.error('Error updating data in Supabase:', error);
+      console.error('Error inserting data to Supabase:', error)
     }
-  };
-  
-  
+  }
 
   return (
     <View>
@@ -122,11 +145,24 @@ export default function JoinMeetDetails({ route }) {
         {/* Button to navigate to the next screen */}
         <Button title="Next" onPress={handleNext} />
 
-        {/* Display current location or loading message */}
+        {/* Display current location */}
         {formData.userLocation && (
           <Text>Current Location: {JSON.stringify(formData.userLocation)}</Text>
         )}
+
+        {/* Display users with the same meetId */}
+        <Text>Users in this Meet:</Text>
+        <FlatList
+  data={meetUsers}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <View>
+      <Text>Name: {item.users.name}</Text>
+      <Text>Location: {JSON.stringify(item.users.location)}</Text>
+    </View>
+  )}
+/>
       </View>
     </View>
-  );
+  )
 }
