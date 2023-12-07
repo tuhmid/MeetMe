@@ -1,6 +1,9 @@
+import { initializeApp } from 'firebase/app';
 
-export const firebaseConfig = {
-    apiKey: "AIzaSyC8epKK5ThDqZytH9e0OEGfFB7F7L1NN2M",
+// import {...} from "firebase/database";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC8epKK5ThDqZytH9e0OEGfFB7F7L1NN2M",
   authDomain: "meetme-7157b.firebaseapp.com",
   databaseURL: "https://meetme-7157b-default-rtdb.firebaseio.com",
   projectId: "meetme-7157b",
@@ -10,3 +13,4 @@ export const firebaseConfig = {
   measurementId: "G-GYWF6XKZ25"
   };
 
+  const app = initializeApp(firebaseConfig);

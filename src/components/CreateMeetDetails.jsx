@@ -5,7 +5,6 @@ import { useNavigation } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper';
 import * as Location from 'expo-location';
 import styles from '../style';
-// import db from '@react-native-firebase/database'
 
 export default function CreateMeetDetails() {
   const navigation = useNavigation();
@@ -128,4 +127,3 @@ export default function CreateMeetDetails() {
     </View>
   );
 }
-
